@@ -18,8 +18,8 @@ class SlotResponse(BaseModel):
 
 # --- Item ---
 class ItemCreate(BaseModel):
-    name: str
-    price: int = Field(..., ge=0)  # Allow any non-negative price
+    name: str = Field(..., min_length=1)
+    price: int = Field(..., gt=0)   # must be strictly greater than 0
     quantity: int = Field(..., gt=0)
 
 
