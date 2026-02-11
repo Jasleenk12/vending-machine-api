@@ -113,16 +113,24 @@ def bulk_remove_items(
     slot = db.query(Slot).filter(Slot.id == slot_id).first()
     if not slot:
         raise ValueError("slot_not_found")
+
     if item_ids is not None and len(item_ids) > 0:
         items = db.query(Item).filter(
             Item.slot_id == slot_id,
             Item.id.in_(item_ids),
         ).all()
         for item in items:
-            slot.current_item_count -= item.quantity
             db.delete(item)
     else:
         for item in list(slot.items):
-            slot.current_item_count -= item.quantity
             db.delete(item)
+
+    # 🔥 IMPORTANT: Flush deletions
+    db.flush()
+
+    # 🔥 Recalculate instead of subtracting
+    slot.current_item_count = sum(
+        i.quantity for i in db.query(Item).filter(Item.slot_id == slot_id).all()
+    )
+
     db.commit()
